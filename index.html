@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oak Creek Public Library - Task Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            library: {
+              50: '#f0f7f6',
+              100: '#d7ece9',
+              200: '#b2dad4',
+              300: '#84c1b9',
+              400: '#58a59c',
+              600: '#34756d',
+              700: '#2c5e58',
+              800: '#274c47',
+              900: '#1b3834',
+              950: '#0e201e'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid #1b3834 !important;
+      outline-offset: 2px !important;
+    }
+    .drag-over {
+      background-color: #f0f7f6 !important;
+      border-color: #2c5e58 !important;
+      border-style: dashed !important;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-library-200 selection:text-library-950">
+
+  <!-- Accessible Skip to Content Link -->
+  <a href="#mainContent" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-library-900 focus:text-white focus:rounded-lg focus:shadow-xl focus:font-bold">
+    Skip to main content
+  </a>
+
+  <!-- ARIA Live Region for Screen Readers -->
+  <div id="srAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <header class="bg-white border-b-2 border-slate-300 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        
+        <!-- Library Branding -->
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-library-800 text-white flex items-center justify-center shadow-xs flex-shrink-0" aria-hidden="true">
+            <i data-lucide="book-open" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 leading-tight">
+                Oak Creek Public Library
+              </h1>
+              <span class="inline-flex items-center text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300" title="100% Static Web App: All tasks are stored securely in your browser">
+                Static App
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm font-semibold text-slate-600">
+              Staff Task & Project Dashboard
+            </p>
+          </div>
+        </div>
+
+        <!-- Primary View Switcher Navigation -->
+        <nav aria-label="Main task views" class="flex items-center flex-wrap gap-1 bg-slate-200/80 p-1 rounded-xl border border-slate-300">
+          <button id="navDashboardBtn" type="button" aria-current="page" class="touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-library-950 shadow-xs transition">
+            <i data-lucide="columns-3" class="w-4 h-4 text-library-700" aria-hidden="true"></i>
+            <span>Dashboard</span>
+          </button>
+          <button id="navTodayBtn" type="button" aria-current="false" class="touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition">
+            <i data-lucide="sun" class="w-4 h-4 text-amber-700" aria-hidden="true"></i>
+            <span>Today View</span>
+          </button>
+          <button id="navWeeklyBtn" type="button" aria-current="false" class="touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition">
+            <i data-lucide="calendar-range" class="w-4 h-4 text-library-700" aria-hidden="true"></i>
+            <span>Weekly Plan</span>
+          </button>
+          <button id="navCalendarBtn" type="button" aria-current="false" class="touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition">
+            <i data-lucide="calendar" class="w-4 h-4 text-library-700" aria-hidden="true"></i>
+            <span>Calendar</span>
+          </button>
+          <button id="navArchiveBtn" type="button" aria-current="false" class="touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition">
+            <i data-lucide="archive" class="w-4 h-4 text-emerald-700" aria-hidden="true"></i>
+            <span>Completed</span>
+          </button>
+        </nav>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="openBackupModalBtn" type="button" title="Backup or transfer library tasks via file" aria-label="Backup or transfer library data" class="touch-target inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm transition shadow-2xs">
+            <i data-lucide="hard-drive-download" class="w-4 h-4 text-slate-700" aria-hidden="true"></i>
+            <span>Backup / Sync</span>
+          </button>
+
+          <button id="openTemplatesBtn" type="button" class="touch-target inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border-2 border-slate-300 text-slate-800 bg-white hover:bg-slate-50 transition font-bold text-xs sm:text-sm shadow-2xs">
+            <i data-lucide="layers" class="w-4 h-4 text-library-700" aria-hidden="true"></i>
+            <span>Templates</span>
+          </button>
+
+          <button id="quickPrintBtn" type="button" title="Print physical task sheet" aria-label="Print task sheet" class="touch-target hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-slate-300 text-slate-800 bg-white hover:bg-slate-50 transition font-semibold text-xs sm:text-sm shadow-2xs">
+            <i data-lucide="printer" class="w-4 h-4 text-slate-700" aria-hidden="true"></i>
+            <span>Print</span>
+          </button>
+
+          <button id="openNewTaskBtn" type="button" class="touch-target inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-library-700 text-white hover:bg-library-800 transition font-bold text-xs sm:text-sm shadow-sm">
+            <i data-lucide="plus-circle" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Add Task</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Summary Metrics Cards -->
+    <section aria-label="Task Summary Statistics" class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4">
+      
+      <!-- Due Today Card -->
+      <button id="cardDueTodayBtn" type="button" class="summary-card text-left bg-white border-2 border-slate-300 hover:border-amber-500 rounded-xl p-4 transition shadow-2xs group focus:outline-none">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Due Today</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center group-hover:scale-105 transition" aria-hidden="true">
+            <i data-lucide="clock" class="w-4 h-4 text-amber-800"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="metricDueToday" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+          <span class="text-xs font-semibold text-slate-600">tasks</span>
+        </div>
+      </button>
+
+      <!-- Overdue Card -->
+      <button id="cardOverdueBtn" type="button" class="summary-card text-left bg-white border-2 border-rose-300 hover:border-rose-600 rounded-xl p-4 transition shadow-2xs group focus:outline-none">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-rose-800">Overdue</span>
+          <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-900 flex items-center justify-center group-hover:scale-105 transition" aria-hidden="true">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-800"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="metricOverdue" class="text-2xl sm:text-3xl font-extrabold text-rose-700">0</span>
+          <span class="text-xs font-semibold text-rose-900">need action</span>
+        </div>
+      </button>
+
+      <!-- High Priority Card -->
+      <button id="cardHighPriorityBtn" type="button" class="summary-card text-left bg-white border-2 border-slate-300 hover:border-rose-500 rounded-xl p-4 transition shadow-2xs group focus:outline-none">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-600">High Priority</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center group-hover:scale-105 transition" aria-hidden="true">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-800"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="metricHighPriority" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+          <span class="text-xs font-semibold text-slate-600">urgent</span>
+        </div>
+      </button>
+
+      <!-- Completed This Week Card -->
+      <div class="bg-white border-2 border-slate-300 rounded-xl p-4 shadow-2xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Completed This Week</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center" aria-hidden="true">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-800"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="metricCompletedWeek" class="text-2xl sm:text-3xl font-extrabold text-emerald-800">0</span>
+          <span class="text-xs font-semibold text-slate-600">finished</span>
+        </div>
+      </div>
+
+    </section>
+
+    <section aria-label="Staff Workload Overview" class="bg-white border-2 border-slate-300 rounded-2xl p-4 sm:p-5 shadow-xs">
+      <div class="flex items-center justify-between mb-3.5">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-library-100 text-library-900 flex items-center justify-center" aria-hidden="true">
+            <i data-lucide="users" class="w-4 h-4 text-library-700"></i>
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-slate-900">Staff Workload</h2>
+            <p class="text-xs text-slate-600 font-medium">Click any staff member to filter their active responsibilities</p>
+          </div>
+        </div>
+        <span class="text-xs font-bold text-slate-600">Active Tasks / Load</span>
+      </div>
+
+      <div id="staffWorkloadContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      
+      <!-- Quick Add Task Bar -->
+      <section aria-label="Quick Add Task" class="lg:col-span-2 bg-white border-2 border-slate-300 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-amber-950 bg-amber-100 px-2 py-0.5 rounded-md">
+              <i data-lucide="zap" class="w-3 h-3 text-amber-800" aria-hidden="true"></i>
+              Quick Add
+            </span>
+            <h2 class="text-sm font-extrabold text-slate-900">Fast Task Entry</h2>
+          </div>
+          <p class="text-xs text-slate-600 mb-3 font-medium">
+            Only the task title is required right now. Full details and attachments can be added later.
+          </p>
+        </div>
+
+        <form id="quickAddForm" class="flex flex-col sm:flex-row gap-2">
+          <label for="quickTaskName" class="sr-only">Task Name</label>
+          <input 
+            type="text" 
+            id="quickTaskName" 
+            required 
+            aria-required="true"
+            placeholder="What needs to be done? (e.g., Order summer craft glue)" 
+            class="touch-target flex-1 px-3.5 py-2.5 border-2 border-slate-300 rounded-lg text-sm font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-library-700"
+          >
+
+          <label for="quickStaffSelect" class="sr-only">Assign Staff</label>
+          <select 
+            id="quickStaffSelect" 
+            class="touch-target px-3 py-2.5 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700"
+          >
+            <option value="Unassigned">Assign: Unassigned</option>
+          </select>
+
+          <button 
+            type="submit" 
+            class="touch-target inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-library-700 hover:bg-library-800 text-white font-extrabold text-sm rounded-lg shadow-xs transition"
+          >
+            <i data-lucide="plus" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Add</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Brain Dump Scratchpad -->
+      <section aria-label="Brain Dump Scratchpad" class="bg-amber-50/70 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center font-bold" aria-hidden="true">
+                <i data-lucide="lightbulb" class="w-4 h-4 text-amber-900"></i>
+              </div>
+              <h2 class="text-sm font-extrabold text-slate-900">Brain Dump</h2>
+            </div>
+            <span id="brainDumpCount" class="text-xs font-black bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <p class="text-xs text-slate-700 font-medium mb-3">
+            Quick notes & reminders to remember without filing a full task.
+          </p>
+        </div>
+
+        <form id="brainDumpForm" class="flex gap-2 mb-3">
+          <label for="brainDumpInput" class="sr-only">Jot down thought</label>
+          <input 
+            type="text" 
+            id="brainDumpInput" 
+            required 
+            placeholder="Jot down quick thought..." 
+            class="touch-target flex-1 px-3 py-2 border-2 border-amber-300 rounded-lg text-xs font-medium text-slate-900 bg-white placeholder:text-slate-500 focus:outline-none focus:border-amber-600"
+          >
+          <button 
+            type="submit" 
+            class="touch-target px-3 py-2 bg-amber-800 hover:bg-amber-900 text-white font-bold text-xs rounded-lg shadow-2xs transition"
+          >
+            Jot
+          </button>
+        </form>
+
+        <div id="brainDumpList" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+      </section>
+
+    </div>
+
+    <!-- 1. DASHBOARD VIEW -->
+    <div id="viewDashboard" class="space-y-4">
+      
+      <section aria-label="Task Filters" class="bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-xs space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2.5">
+          
+          <!-- Search Input -->
+          <div class="sm:col-span-2 relative">
+            <label for="filterSearch" class="sr-only">Search tasks, programs, or notes</label>
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-600">
+              <i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i>
+            </div>
+            <input 
+              type="text" 
+              id="filterSearch" 
+              placeholder="Search tasks, notes, links..." 
+              class="touch-target w-full pl-9 pr-3.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-library-700"
+            >
+          </div>
+
+          <!-- Category Filter -->
+          <div>
+            <label for="filterCategory" class="sr-only">Filter by Category</label>
+            <select id="filterCategory" class="touch-target w-full px-2.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700">
+              <option value="ALL">All Categories</option>
+              <option value="Circulation">Circulation</option>
+              <option value="Programming">Programming</option>
+              <option value="Collection Management">Collection Mgmt</option>
+              <option value="Community Outreach">Outreach</option>
+              <option value="Technology">Technology</option>
+              <option value="Facilities">Facilities</option>
+              <option value="Marketing/Social Media">Marketing & Social</option>
+              <option value="Grants/Funding">Grants/Funding</option>
+              <option value="Board/Administration">Board/Admin</option>
+              <option value="Volunteers">Volunteers</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Staff Filter -->
+          <div>
+            <label for="filterStaff" class="sr-only">Filter by Staff</label>
+            <select id="filterStaff" class="touch-target w-full px-2.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700">
+              <option value="ALL">All Staff</option>
+            </select>
+          </div>
+
+          <!-- Event Filter -->
+          <div>
+            <label for="filterEvent" class="sr-only">Filter by Event/Program</label>
+            <select id="filterEvent" class="touch-target w-full px-2.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700">
+              <option value="ALL">All Events & Programs</option>
+              <option value="__ANY__">Any with Event</option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div>
+            <label for="filterPriority" class="sr-only">Filter by Priority</label>
+            <select id="filterPriority" class="touch-target w-full px-2.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700">
+              <option value="ALL">All Priorities</option>
+              <option value="High">High Priority</option>
+              <option value="Medium">Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
+          </div>
+
+          <!-- Recurrence Filter -->
+          <div>
+            <label for="filterRecurrence" class="sr-only">Filter by Repeat Schedule</label>
+            <select id="filterRecurrence" class="touch-target w-full px-2.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700">
+              <option value="ALL">All Schedules</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="Annually">Annually</option>
+              <option value="RECURRING">Any Recurring</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Filter Sub-bar: Board/List toggle and Clear Filters -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+          <div class="flex items-center gap-2">
+            <span id="activeFilterBadge" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-black bg-library-100 text-library-950 border border-library-300">
+              <span>Filter active</span>
+              <button type="button" id="clearFiltersBtn" class="text-library-950 hover:underline font-extrabold">&times; Clear</button>
+            </span>
+            <span id="taskCountText" class="text-xs font-bold text-slate-600">Showing all tasks</span>
+          </div>
+
+          <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-300" role="group" aria-label="Layout view options">
+            <button id="btnSubViewBoard" type="button" class="touch-target px-2.5 py-1.5 rounded-md text-xs font-extrabold bg-white text-slate-900 shadow-2xs flex items-center gap-1.5">
+              <i data-lucide="columns-3" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span class="hidden sm:inline">Board</span>
+            </button>
+            <button id="btnSubViewList" type="button" class="touch-target px-2.5 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1.5">
+              <i data-lucide="list" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span class="hidden sm:inline">List Table</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div id="boardColumnsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Not Started Column -->
+        <div class="bg-slate-200/70 border-2 border-slate-300 rounded-2xl p-3.5 flex flex-col min-h-[420px]">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-slate-300 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-slate-500" aria-hidden="true"></span>
+              <h3 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-900">Not Started</h3>
+            </div>
+            <span id="colCountNotStarted" class="text-xs font-black bg-white text-slate-900 px-2 py-0.5 rounded-md border border-slate-300">0</span>
+          </div>
+          <div id="colListNotStarted" class="space-y-3 flex-1 overflow-y-auto"></div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="bg-blue-50/70 border-2 border-blue-200 rounded-2xl p-3.5 flex flex-col min-h-[420px]">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-blue-200 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-600" aria-hidden="true"></span>
+              <h3 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-blue-950">In Progress</h3>
+            </div>
+            <span id="colCountInProgress" class="text-xs font-black bg-white text-blue-950 px-2 py-0.5 rounded-md border border-blue-300">0</span>
+          </div>
+          <div id="colListInProgress" class="space-y-3 flex-1 overflow-y-auto"></div>
+        </div>
+
+        <!-- Waiting Column -->
+        <div class="bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-3.5 flex flex-col min-h-[420px]">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-amber-200 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-amber-600" aria-hidden="true"></span>
+              <h3 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-950">Waiting</h3>
+            </div>
+            <span id="colCountWaiting" class="text-xs font-black bg-white text-amber-950 px-2 py-0.5 rounded-md border border-amber-300">0</span>
+          </div>
+          <div id="colListWaiting" class="space-y-3 flex-1 overflow-y-auto"></div>
+        </div>
+
+        <!-- Complete Column -->
+        <div class="bg-emerald-50/70 border-2 border-emerald-200 rounded-2xl p-3.5 flex flex-col min-h-[420px]">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-emerald-200 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-600" aria-hidden="true"></span>
+              <h3 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-emerald-950">Complete</h3>
+            </div>
+            <span id="colCountComplete" class="text-xs font-black bg-white text-emerald-950 px-2 py-0.5 rounded-md border border-emerald-300">0</span>
+          </div>
+          <div id="colListComplete" class="space-y-3 flex-1 overflow-y-auto"></div>
+        </div>
+
+      </div>
+
+      <div id="listViewContainer" class="hidden bg-white border-2 border-slate-300 rounded-2xl overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase tracking-wider">
+              <tr>
+                <th scope="col" class="py-3 px-4">Task & Program</th>
+                <th scope="col" class="py-3 px-4">Staff</th>
+                <th scope="col" class="py-3 px-4">Due Date</th>
+                <th scope="col" class="py-3 px-4">Priority</th>
+                <th scope="col" class="py-3 px-4">Category</th>
+                <th scope="col" class="py-3 px-4">Status</th>
+                <th scope="col" class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listTableBody" class="divide-y divide-slate-200 font-medium"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 2. TODAY VIEW -->
+    <div id="viewToday" class="hidden space-y-4">
+      <div class="bg-amber-100/80 border-2 border-amber-300 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-amber-600 animate-pulse" aria-hidden="true"></span>
+            <h2 class="text-base sm:text-lg font-extrabold text-amber-950">Today View: Focus on What Matters</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-amber-950 font-medium mt-1">
+            Displaying tasks due today, overdue tasks, high-priority work, and tasks currently in progress.
+          </p>
+        </div>
+        <button id="btnReturnToFullDashboard" type="button" class="touch-target inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border-2 border-amber-400 text-amber-950 hover:bg-amber-50 font-extrabold text-xs sm:text-sm shadow-2xs transition self-start sm:self-auto">
+          <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Return to Full Dashboard</span>
+        </button>
+      </div>
+
+      <div id="todayCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- 3. WEEKLY PLANNING VIEW -->
+    <div id="viewWeekly" class="hidden space-y-4">
+      <div class="bg-white border-2 border-slate-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Weekly Task Planning</h2>
+          <p class="text-xs text-slate-600 font-medium">Organize tasks across weekdays. Drag or use the move menu to reschedule.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="weeklyPrevBtn" type="button" class="touch-target px-3 py-1.5 rounded-lg border-2 border-slate-300 hover:bg-slate-100 font-bold text-xs text-slate-800 transition">
+            &larr; Prev Week
+          </button>
+          <span id="weeklyDateRangeLabel" class="text-xs font-extrabold text-slate-900 px-2"></span>
+          <button id="weeklyNextBtn" type="button" class="touch-target px-3 py-1.5 rounded-lg border-2 border-slate-300 hover:bg-slate-100 font-bold text-xs text-slate-800 transition">
+            Next Week &rarr;
+          </button>
+          <button id="weeklyCurrentBtn" type="button" class="touch-target px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-xs text-slate-800 border border-slate-300 transition">
+            This Week
+          </button>
+        </div>
+      </div>
+
+      <div id="weeklyColumnsGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+    </div>
+
+    <!-- 4. MONTHLY CALENDAR VIEW -->
+    <div id="viewCalendar" class="hidden space-y-4">
+      <div class="bg-white border-2 border-slate-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Monthly Due Date Calendar</h2>
+          <p class="text-xs text-slate-600 font-medium">Click on any date to quickly add a task, or click a task to view details.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="calPrevMonthBtn" type="button" class="touch-target px-3 py-1.5 rounded-lg border-2 border-slate-300 hover:bg-slate-100 font-bold text-xs text-slate-800 transition">
+            &larr; Prev Month
+          </button>
+          <span id="calendarMonthYearLabel" class="text-sm font-extrabold text-slate-900 px-2 min-w-[130px] text-center"></span>
+          <button id="calNextMonthBtn" type="button" class="touch-target px-3 py-1.5 rounded-lg border-2 border-slate-300 hover:bg-slate-100 font-bold text-xs text-slate-800 transition">
+            Next Month &rarr;
+          </button>
+          <button id="calCurrentMonthBtn" type="button" class="touch-target px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-xs text-slate-800 border border-slate-300 transition">
+            Today
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white border-2 border-slate-300 rounded-2xl overflow-hidden shadow-xs">
+        <div class="grid grid-cols-7 bg-slate-100 border-b-2 border-slate-300 text-center text-xs font-extrabold text-slate-700 py-2">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div id="calendarDaysGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-200 min-h-[500px]"></div>
+      </div>
+    </div>
+
+    <!-- 5. COMPLETED TASKS ARCHIVE VIEW -->
+    <div id="viewArchive" class="hidden space-y-4">
+      <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-xs">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-200 text-emerald-900 flex items-center justify-center font-bold" aria-hidden="true">
+              <i data-lucide="archive" class="w-4 h-4 text-emerald-900"></i>
+            </div>
+            <h2 class="text-base sm:text-lg font-extrabold text-emerald-950">Completed Tasks Archive</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-900 font-medium mt-1">
+            Historical log of all finished library tasks, programs, and grant duties. Reopen tasks anytime if more work is needed.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="bg-white px-4 py-2 rounded-xl border border-emerald-300 text-center">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600 block">This Week</span>
+            <span id="archiveCompletedThisWeek" class="text-lg font-black text-emerald-800">0</span>
+          </div>
+          <div class="bg-white px-4 py-2 rounded-xl border border-emerald-300 text-center">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600 block">This Month</span>
+            <span id="archiveCompletedThisMonth" class="text-lg font-black text-emerald-800">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row gap-3">
+        <label for="archiveSearchInput" class="sr-only">Search archive</label>
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-600">
+            <i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i>
+          </div>
+          <input 
+            type="text" 
+            id="archiveSearchInput" 
+            placeholder="Search completed tasks by name, notes, staff, or event..." 
+            class="touch-target w-full pl-9 pr-3.5 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:border-library-700"
+          >
+        </div>
+        <select id="archiveStaffFilter" class="touch-target px-3 py-2 border-2 border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:border-library-700">
+          <option value="ALL">All Staff</option>
+        </select>
+      </div>
+
+      <div class="bg-white border-2 border-slate-300 rounded-2xl overflow-hidden shadow-xs">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase tracking-wider">
+            <tr>
+              <th scope="col" class="py-3 px-4">Task & Program</th>
+              <th scope="col" class="py-3 px-4">Staff</th>
+              <th scope="col" class="py-3 px-4">Category</th>
+              <th scope="col" class="py-3 px-4">Completed On</th>
+              <th scope="col" class="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="archiveTableBody" class="divide-y divide-slate-200 font-medium"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Printable Area for Physical Desk Log -->
+  <div id="printArea" class="hidden">
+    <div class="p-8 max-w-4xl mx-auto">
+      <div class="border-b-2 border-black pb-4 mb-6">
+        <h1 class="text-2xl font-bold">Oak Creek Public Library - Daily Staff Task Sheet</h1>
+        <p id="printDateNotice" class="text-sm text-gray-700 mt-1"></p>
+      </div>
+      <div id="printTasksList" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT TASK MODAL -->
+  <div id="taskModal" class="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+    <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border-2 border-slate-400 overflow-hidden transform transition-all max-h-[92vh] flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-library-100 text-library-900 flex items-center justify-center font-bold" aria-hidden="true">
+            <i data-lucide="edit-3" class="w-5 h-5 text-library-700"></i>
+          </div>
+          <div>
+            <h3 id="taskModalTitle" class="text-base sm:text-lg font-extrabold text-slate-900">Add Library Task</h3>
+            <p class="text-xs text-slate-600 font-medium">Keep our public library organized and running smoothly</p>
+          </div>
+        </div>
+        <button id="closeTaskModalBtn" type="button" aria-label="Close dialog" class="touch-target text-slate-600 hover:text-slate-950 rounded-lg p-2 hover:bg-slate-200 transition">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <form id="taskForm" class="p-6 space-y-4 overflow-y-auto flex-1">
+        <input type="hidden" id="taskId">
+
+        <div>
+          <label for="taskName" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+            Task Name <span class="text-rose-700 font-black">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="taskName" 
+            required 
+            aria-required="true"
+            placeholder="e.g., Prepare Storytime Craft Kits" 
+            class="touch-target w-full px-3.5 py-2.5 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:outline-none focus:border-library-700"
+          >
+        </div>
+
+        <div>
+          <label for="taskDescription" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+            Notes & Details
+          </label>
+          <textarea 
+            id="taskDescription" 
+            rows="2" 
+            placeholder="Any specific instructions, patron notes, vendor info, or shelf locations..." 
+            class="w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-medium text-slate-900 focus:outline-none focus:border-library-700"
+          ></textarea>
+        </div>
+
+        <!-- Row: Staff Member & Due Date -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="taskStaff" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Staff Member Responsible <span class="text-rose-700 font-black">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="taskStaff" 
+              required 
+              aria-required="true"
+              list="staffDatalist"
+              placeholder="e.g., Sarah Miller (Director)" 
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:outline-none focus:border-library-700"
+            >
+            <datalist id="staffDatalist"></datalist>
+          </div>
+
+          <div>
+            <label for="taskDueDate" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Due Date <span class="text-rose-700 font-black">*</span>
+            </label>
+            <input 
+              type="date" 
+              id="taskDueDate" 
+              required 
+              aria-required="true"
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:outline-none focus:border-library-700"
+            >
+          </div>
+        </div>
+
+        <!-- Row: Priority, Category, Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="taskPriority" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Priority <span class="text-rose-700 font-black">*</span>
+            </label>
+            <select id="taskPriority" class="touch-target w-full px-3 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:border-library-700">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="taskCategory" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Category <span class="text-rose-700 font-black">*</span>
+            </label>
+            <select id="taskCategory" class="touch-target w-full px-3 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:border-library-700">
+              <option value="Circulation">Circulation</option>
+              <option value="Programming">Programming</option>
+              <option value="Collection Management">Collection Management</option>
+              <option value="Community Outreach">Community Outreach</option>
+              <option value="Technology">Technology</option>
+              <option value="Facilities">Facilities</option>
+              <option value="Marketing/Social Media">Marketing/Social Media</option>
+              <option value="Grants/Funding">Grants/Funding</option>
+              <option value="Board/Administration">Board/Administration</option>
+              <option value="Volunteers">Volunteers</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="taskStatus" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Status <span class="text-rose-700 font-black">*</span>
+            </label>
+            <select id="taskStatus" class="touch-target w-full px-3 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:border-library-700">
+              <option value="Not Started" selected>Not Started</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Waiting">Waiting</option>
+              <option value="Complete">Complete</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row: Recurring Schedule & Related Event -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="taskRecurrence" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Repeat Schedule
+            </label>
+            <select id="taskRecurrence" class="touch-target w-full px-3 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:border-library-700">
+              <option value="None" selected>None (One-time task)</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="Annually">Annually</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="taskEvent" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Related Event or Program <span class="text-slate-500 font-normal">(Optional)</span>
+            </label>
+            <input 
+              type="text" 
+              id="taskEvent" 
+              list="eventsDatalist"
+              placeholder="e.g., Teen Craft Night, Book Sale" 
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-medium text-slate-900 focus:outline-none focus:border-library-700"
+            >
+            <datalist id="eventsDatalist"></datalist>
+          </div>
+        </div>
+
+        <!-- Attached Link / URL -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="taskLinkUrl" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Web Link / Resource URL <span class="text-slate-500 font-normal">(Optional)</span>
+            </label>
+            <input 
+              type="url" 
+              id="taskLinkUrl" 
+              placeholder="https://drive.google.com/... or Canva link" 
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-medium text-slate-900 focus:outline-none focus:border-library-700"
+            >
+          </div>
+
+          <div>
+            <label for="taskLinkLabel" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Link Label <span class="text-slate-500 font-normal">(Optional)</span>
+            </label>
+            <input 
+              type="text" 
+              id="taskLinkLabel" 
+              placeholder="e.g., Canva Design, Meeting Agenda" 
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-medium text-slate-900 focus:outline-none focus:border-library-700"
+            >
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-200">
+          <button type="button" id="cancelTaskModalBtn" class="touch-target px-4 py-2 text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100 rounded-lg transition">Cancel</button>
+          <button type="submit" class="touch-target inline-flex items-center gap-2 px-6 py-2.5 text-sm font-extrabold bg-library-700 hover:bg-library-800 text-white rounded-lg shadow-sm transition">
+            <i data-lucide="check" class="w-4 h-4" aria-hidden="true"></i>
+            <span id="saveTaskBtnText">Save Task</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="deleteModal" class="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border-2 border-slate-400">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-800 flex items-center justify-center mb-3 mx-auto font-black" aria-hidden="true">
+        <i data-lucide="trash-2" class="w-6 h-6"></i>
+      </div>
+      <h3 id="deleteModalTitle" class="text-base font-extrabold text-slate-900 text-center">Delete this library task?</h3>
+      <p id="deleteTaskTitle" class="text-sm font-semibold text-slate-700 text-center mt-1">This action cannot be undone.</p>
+      
+      <div class="mt-6 flex gap-3 justify-center">
+        <button id="cancelDeleteBtn" type="button" class="touch-target flex-1 px-4 py-2.5 border-2 border-slate-300 rounded-lg text-sm font-bold text-slate-800 hover:bg-slate-100 transition">Cancel</button>
+        <button id="confirmDeleteBtn" type="button" class="touch-target flex-1 px-4 py-2.5 bg-rose-700 hover:bg-rose-800 rounded-lg text-sm font-extrabold text-white shadow-sm transition">Delete Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REUSABLE TEMPLATES MODAL -->
+  <div id="templateModal" class="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="templateModalTitle">
+    <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border-2 border-slate-400 overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-library-100 text-library-900 flex items-center justify-center font-bold" aria-hidden="true">
+            <i data-lucide="layers" class="w-5 h-5 text-library-700"></i>
+          </div>
+          <div>
+            <h3 id="templateModalTitle" class="text-base sm:text-lg font-extrabold text-slate-900">Library Project Templates</h3>
+            <p class="text-xs text-slate-600 font-medium">Batch-generate coordinated library checklists at once</p>
+          </div>
+        </div>
+        <button id="closeTemplateModalBtn" type="button" aria-label="Close template dialog" class="touch-target text-slate-600 hover:text-slate-950 rounded-lg p-2 hover:bg-slate-200 transition">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 overflow-y-auto flex-1">
+        <div>
+          <label for="templateSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+            Choose Project Template
+          </label>
+          <select id="templateSelect" class="touch-target w-full px-3.5 py-2.5 border-2 border-slate-300 rounded-lg text-sm font-bold text-slate-900 bg-white focus:outline-none focus:border-library-700">
+            <option value="program">Library Program Checklist (11 Tasks: Choose date, reserve space, supplies, promote, run...)</option>
+            <option value="board">Monthly Board Meeting (8 Tasks: Stats, attendance, packet, director's report...)</option>
+            <option value="promote">Promote a Library Event (7 Tasks: Flyer, web, Facebook, reminder, signage...)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="templateProgramName" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Program or Event Title <span class="text-rose-700 font-black">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="templateProgramName" 
+              required 
+              value="Teen Craft Night: Origami & Anime" 
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:outline-none focus:border-library-700"
+            >
+          </div>
+
+          <div>
+            <label for="templateEventDate" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+              Target Event Date <span class="text-rose-700 font-black">*</span>
+            </label>
+            <input 
+              type="date" 
+              id="templateEventDate" 
+              required 
+              class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:outline-none focus:border-library-700"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label for="templateStaffLead" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+            Assign Lead Staff Member
+          </label>
+          <input 
+            type="text" 
+            id="templateStaffLead" 
+            list="staffDatalist" 
+            value="Elena Ruiz (Circulation & Desk)" 
+            class="touch-target w-full px-3.5 py-2 border-2 border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:outline-none focus:border-library-700"
+          >
+        </div>
+
+        <div class="pt-2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-800">Checklist Tasks to Generate</span>
+            <span id="templateItemCount" class="text-xs font-extrabold text-slate-600">11 tasks</span>
+          </div>
+          <div id="templateItemsList" class="space-y-2 border-2 border-slate-200 rounded-xl p-3 bg-slate-50 max-h-56 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3 bg-slate-50">
+        <button type="button" id="cancelTemplateModalBtn" class="touch-target px-4 py-2 text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+        <button type="button" id="btnGenerateTemplateTasks" class="touch-target inline-flex items-center gap-2 px-6 py-2.5 text-sm font-extrabold bg-library-700 hover:bg-library-800 text-white rounded-lg shadow-sm transition">
+          <i data-lucide="layers" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Create All Tasks</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKUP & DATA SYNC MODAL -->
+  <div id="backupModal" class="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="backupModalTitle">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl border-2 border-slate-400 overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-library-100 text-library-900 flex items-center justify-center font-bold" aria-hidden="true">
+            <i data-lucide="hard-drive-download" class="w-5 h-5 text-library-700"></i>
+          </div>
+          <div>
+            <h3 id="backupModalTitle" class="text-base sm:text-lg font-extrabold text-slate-900">Backup & Transfer Data</h3>
+            <p class="text-xs text-slate-600 font-medium">Export or restore library tasks across computers without servers</p>
+          </div>
+        </div>
+        <button id="closeBackupModalBtn" type="button" aria-label="Close dialog" class="touch-target text-slate-600 hover:text-slate-950 rounded-lg p-2 hover:bg-slate-200 transition">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5 overflow-y-auto flex-1">
+        
+        <!-- Static Web App Explainer -->
+        <div class="bg-slate-50 border border-slate-300 rounded-xl p-4 text-xs text-slate-700 leading-relaxed space-y-1">
+          <p class="font-extrabold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-700" aria-hidden="true"></i>
+            <span>No Server Required &mdash; 100% Private</span>
+          </p>
+          <p>
+            Your dashboard stores all tasks right inside your web browser. You can export a backup file at the end of the day or transfer tasks to another staff computer anytime.
+          </p>
+        </div>
+
+        <!-- Export Section -->
+        <div class="border-2 border-slate-200 rounded-xl p-4 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-extrabold text-slate-900">Export Task Backup</h4>
+              <p class="text-xs text-slate-600 font-medium">Download a complete backup JSON file of all tasks and brain dumps.</p>
+            </div>
+          </div>
+          <button id="btnExportJson" type="button" class="touch-target w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-library-700 hover:bg-library-800 text-white font-extrabold text-xs sm:text-sm shadow-xs transition">
+            <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Download Backup File (.json)</span>
+          </button>
+        </div>
+
+        <!-- Import Section -->
+        <div class="border-2 border-slate-200 rounded-xl p-4 space-y-3">
+          <div>
+            <h4 class="text-sm font-extrabold text-slate-900">Restore or Import Tasks</h4>
+            <p class="text-xs text-slate-600 font-medium">Load tasks from a previously saved backup file.</p>
+          </div>
+          <label class="touch-target cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-library-700 hover:bg-library-50 rounded-xl p-4 transition group text-center">
+            <i data-lucide="upload-cloud" class="w-6 h-6 text-slate-500 group-hover:text-library-800 mb-1" aria-hidden="true"></i>
+            <span class="text-xs font-bold text-slate-800 group-hover:text-library-950">Click to choose a .json backup file</span>
+            <span class="text-[11px] text-slate-500 mt-0.5">Supports backups created by this dashboard</span>
+            <input type="file" id="importFileInput" accept=".json,application/json" class="sr-only">
+          </label>
+        </div>
+
+        <!-- Reset Sample Data -->
+        <div class="pt-2 flex items-center justify-between border-t border-slate-200">
+          <button type="button" id="btnResetSampleData" class="touch-target text-xs font-bold text-slate-600 hover:text-rose-700 underline">
+            Reset to Sample Library Tasks
+          </button>
+          <button type="button" id="closeBackupModalBtn2" class="touch-target px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition">
+            Done
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" role="alert" aria-live="assertive" class="fixed bottom-6 right-6 z-50 bg-slate-950 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-bold transform translate-y-24 opacity-0 transition-all duration-300 border border-slate-700 pointer-events-none">
+    <div id="toastIcon" aria-hidden="true"></div>
+    <span id="toastMessage"></span>
+  </div>
+
+  <script>
+    function safeRenderIcons() {
+      if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+        try {
+          lucide.createIcons();
+          return;
+        } catch (e) {
+          console.warn('Lucide createIcons error:', e);
+        }
+      }
+    }
+
+    function formatDateIso(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    const todayDate = new Date();
+    const todayStr = formatDateIso(todayDate);
+
+    // Initial authentic sample dataset
+    const INITIAL_TASKS = [
+      {
+        id: 'task-1',
+        name: 'Order craft supplies for Teen Anime Night',
+        description: 'Need cardstock, origami paper, fine-tip markers, and snacks from Costco or Amazon.',
+        staff: 'Elena Ruiz (Circulation & Desk)',
+        dueDate: todayStr,
+        priority: 'High',
+        category: 'Programming',
+        recurrence: 'None',
+        status: 'In Progress',
+        event: 'Teen Anime & Origami Night',
+        linkUrl: 'https://canva.com',
+        linkLabel: 'Canva Event Flyer',
+        createdAt: Date.now() - 86400000 * 2
+      },
+      {
+        id: 'task-2',
+        name: 'Catalog & label new adult fiction arrivals',
+        description: '24 new hardcovers received from Baker & Taylor waiting on processing cart B.',
+        staff: 'Marcus Vance (Cataloging & Tech)',
+        dueDate: formatDateIso(new Date(Date.now() - 86400000)), // Overdue
+        priority: 'Medium',
+        category: 'Collection Management',
+        recurrence: 'Weekly',
+        status: 'Not Started',
+        event: '',
+        linkUrl: '',
+        linkLabel: '',
+        createdAt: Date.now() - 86400000 * 3
+      },
+      {
+        id: 'task-3',
+        name: 'Prepare director report & circulation stats for Board',
+        description: 'Pull monthly statistics from Polaris ILS and print 7 board packets.',
+        staff: 'Sarah Miller (Director)',
+        dueDate: formatDateIso(new Date(Date.now() + 86400000 * 3)),
+        priority: 'High',
+        category: 'Board/Administration',
+        recurrence: 'Monthly',
+        status: 'In Progress',
+        event: 'Monthly Board Meeting',
+        linkUrl: 'https://docs.google.com',
+        linkLabel: 'Board Agenda & Financial Sheet',
+        createdAt: Date.now() - 86400000 * 5
+      },
+      {
+        id: 'task-4',
+        name: 'Check public printer paper & toner levels',
+        description: 'Verify drawer 2 letter stock and wipe down payment coin-op console.',
+        staff: 'David Patel (Youth Services)',
+        dueDate: todayStr,
+        priority: 'Low',
+        category: 'Technology',
+        recurrence: 'Daily',
+        status: 'Not Started',
+        event: '',
+        linkUrl: '',
+        linkLabel: '',
+        createdAt: Date.now() - 86400000
+      },
+      {
+        id: 'task-5',
+        name: 'Submit State Library Technology Grant application',
+        description: 'Final submission deadline for $12,000 public lab modernization grant.',
+        staff: 'Sarah Miller (Director)',
+        dueDate: formatDateIso(new Date(Date.now() + 86400000 * 7)),
+        priority: 'High',
+        category: 'Grants/Funding',
+        recurrence: 'None',
+        status: 'Waiting',
+        event: '',
+        linkUrl: 'https://statelibrary.gov',
+        linkLabel: 'Grant Portal Submission Page',
+        createdAt: Date.now() - 86400000 * 6
+      },
+      {
+        id: 'task-6',
+        name: 'Post weekly storytime schedule on Facebook',
+        description: 'Include graphic for Toddler Time on Tuesday and Lego Club on Friday.',
+        staff: 'Elena Ruiz (Circulation & Desk)',
+        dueDate: formatDateIso(new Date(Date.now() - 86400000 * 2)), // Overdue
+        priority: 'Medium',
+        category: 'Marketing/Social Media',
+        recurrence: 'Weekly',
+        status: 'Waiting',
+        event: 'Toddler Storytime',
+        linkUrl: 'https://facebook.com',
+        linkLabel: 'Library Facebook Page',
+        createdAt: Date.now() - 86400000 * 4
+      },
+      {
+        id: 'task-7',
+        name: 'Weed damaged DVDs from section 791',
+        description: 'Inspect scratched discs and withdraw lost titles from database.',
+        staff: 'David Patel (Youth Services)',
+        dueDate: formatDateIso(new Date(Date.now() - 86400000)),
+        priority: 'Low',
+        category: 'Collection Management',
+        recurrence: 'None',
+        status: 'Complete',
+        event: '',
+        linkUrl: '',
+        linkLabel: '',
+        createdAt: Date.now() - 86400000 * 4,
+        completedAt: Date.now() - 86400000
+      }
+    ];
+
+    const INITIAL_BRAIN_DUMPS = [
+      { id: 'bd-1', text: 'Patron Mrs. Higgins asked if we can host an Intro to Watercolor class in November' },
+      { id: 'bd-2', text: 'Circulation desk barcode scanner cable is fraying on computer #2' },
+      { id: 'bd-3', text: 'Need more Summer Reading bookmarks before Friday morning' }
+    ];
+
+    let tasks = JSON.parse(localStorage.getItem('library_tasks_data')) || INITIAL_TASKS;
+    let brainDumps = JSON.parse(localStorage.getItem('library_brain_dumps')) || INITIAL_BRAIN_DUMPS;
+    
+    let mainActiveView = 'dashboard';
+    let subActiveView = 'board';
+    let activeCardFilter = null;
+    let taskPendingDelete = null;
+    let lastActiveElement = null;
+
+    let calendarDate = new Date();
+    let weeklyDate = new Date();
+
+    const CATEGORY_COLORS = {
+      'Circulation': { bg: 'bg-emerald-100', text: 'text-emerald-950', border: 'border-emerald-300' },
+      'Programming': { bg: 'bg-purple-100', text: 'text-purple-950', border: 'border-purple-300' },
+      'Collection Management': { bg: 'bg-blue-100', text: 'text-blue-950', border: 'border-blue-300' },
+      'Community Outreach': { bg: 'bg-teal-100', text: 'text-teal-950', border: 'border-teal-300' },
+      'Technology': { bg: 'bg-indigo-100', text: 'text-indigo-950', border: 'border-indigo-300' },
+      'Facilities': { bg: 'bg-amber-100', text: 'text-amber-950', border: 'border-amber-300' },
+      'Marketing/Social Media': { bg: 'bg-pink-100', text: 'text-pink-950', border: 'border-pink-300' },
+      'Grants/Funding': { bg: 'bg-emerald-100', text: 'text-emerald-950', border: 'border-emerald-400' },
+      'Board/Administration': { bg: 'bg-slate-200', text: 'text-slate-950', border: 'border-slate-400' },
+      'Volunteers': { bg: 'bg-lime-100', text: 'text-lime-950', border: 'border-lime-300' },
+      'Other': { bg: 'bg-slate-100', text: 'text-slate-900', border: 'border-slate-300' }
+    };
+
+    function announceToScreenReader(message) {
+      const announcer = document.getElementById('srAnnouncer');
+      if (announcer) {
+        announcer.textContent = message;
+      }
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      
+      toastMsg.textContent = message;
+      toastIcon.innerHTML = isError 
+        ? '<svg class="w-5 h-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>'
+        : '<svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="9 12 11 14 15 10" stroke-width="2"/></svg>';
+      
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem('library_tasks_data', JSON.stringify(tasks));
+      } catch (err) {
+        console.warn('LocalStorage error:', err);
+      }
+      populateStaffFilterOptions();
+      populateEventFilterOptions();
+      renderDashboard();
+    }
+
+    function saveBrainDumps() {
+      try {
+        localStorage.setItem('library_brain_dumps', JSON.stringify(brainDumps));
+      } catch (err) {
+        console.warn('LocalStorage error:', err);
+      }
+      renderBrainDumps();
+    }
+
+    function checkEmptyColumn(columnEl, emptyText) {
+      if (!columnEl) return;
+      if (columnEl.children.length === 0) {
+        columnEl.innerHTML = `
+          <div class="p-6 border-2 border-dashed border-slate-300 rounded-xl text-center text-slate-500 font-semibold text-xs flex flex-col items-center justify-center gap-1.5 h-32">
+            <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 14 14" stroke-width="2"/></svg>
+            <span>${emptyText}</span>
+          </div>
+        `;
+      }
+    }
+
+    function computeNextDueDate(currentDueDateStr, recurrence) {
+      const parts = currentDueDateStr.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+
+      switch (recurrence) {
+        case 'Daily':
+          d.setDate(d.getDate() + 1);
+          break;
+        case 'Weekly':
+          d.setDate(d.getDate() + 7);
+          break;
+        case 'Monthly':
+          d.setMonth(d.getMonth() + 1);
+          break;
+        case 'Quarterly':
+          d.setMonth(d.getMonth() + 3);
+          break;
+        case 'Annually':
+          d.setFullYear(d.getFullYear() + 1);
+          break;
+      }
+      return formatDateIso(d);
+    }
+
+    function renderSummaryCards() {
+      const now = new Date();
+      const currentDayIso = formatDateIso(now);
+      const activeTasks = tasks.filter(t => t.status !== 'Complete');
+
+      const dueTodayCount = activeTasks.filter(t => t.dueDate === currentDayIso).length;
+      const overdueCount = activeTasks.filter(t => t.dueDate < currentDayIso).length;
+      const highPriorityCount = activeTasks.filter(t => t.priority === 'High').length;
+
+      const dayOfWeek = (now.getDay() + 6) % 7;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - dayOfWeek);
+      monday.setHours(0, 0, 0, 0);
+
+      const completedThisWeekCount = tasks.filter(t => {
+        if (t.status !== 'Complete' || !t.completedAt) return false;
+        return t.completedAt >= monday.getTime();
+      }).length;
+
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      const completedThisMonthCount = tasks.filter(t => {
+        if (t.status !== 'Complete' || !t.completedAt) return false;
+        return t.completedAt >= firstOfMonth;
+      }).length;
+
+      document.getElementById('metricDueToday').textContent = dueTodayCount;
+      document.getElementById('metricOverdue').textContent = overdueCount;
+      document.getElementById('metricHighPriority').textContent = highPriorityCount;
+      document.getElementById('metricCompletedWeek').textContent = completedThisWeekCount;
+
+      const archWeek = document.getElementById('archiveCompletedThisWeek');
+      const archMonth = document.getElementById('archiveCompletedThisMonth');
+      if (archWeek) archWeek.textContent = completedThisWeekCount;
+      if (archMonth) archMonth.textContent = completedThisMonthCount;
+    }
+
+    function renderStaffWorkload() {
+      const container = document.getElementById('staffWorkloadContainer');
+      if (!container) return;
+
+      const activeTasks = tasks.filter(t => t.status !== 'Complete');
+      const staffMap = {};
+
+      ['Elena Ruiz (Circulation & Desk)', 'Sarah Miller (Director)', 'David Patel (Youth Services)', 'Marcus Vance (Cataloging & Tech)'].forEach(s => {
+        staffMap[s] = { total: 0, overdue: 0 };
+      });
+
+      activeTasks.forEach(t => {
+        const name = t.staff || 'Unassigned';
+        if (!staffMap[name]) staffMap[name] = { total: 0, overdue: 0 };
+        staffMap[name].total += 1;
+        if (t.dueDate < todayStr) staffMap[name].overdue += 1;
+      });
+
+      const currentSelectedStaff = document.getElementById('filterStaff').value;
+
+      container.innerHTML = Object.entries(staffMap).map(([staffName, data]) => {
+        const isSelected = (currentSelectedStaff === staffName);
+        const isOverloaded = data.total >= 4;
+        const isModerate = data.total === 3;
+
+        let badgeStyle = 'bg-emerald-100 text-emerald-950 border-emerald-300';
+        let statusLabel = 'Normal Load';
+        if (isOverloaded) {
+          badgeStyle = 'bg-rose-100 text-rose-950 border-rose-300';
+          statusLabel = 'Heavy Load';
+        } else if (isModerate) {
+          badgeStyle = 'bg-amber-100 text-amber-950 border-amber-300';
+          statusLabel = 'Moderate';
+        }
+
+        return `
+          <button 
+            type="button" 
+            onclick="handleStaffCardClick('${staffName.replace(/'/g, "\\'")}')" 
+            class="touch-target text-left p-3 rounded-xl border-2 transition ${isSelected ? 'border-library-800 bg-library-50 shadow-sm ring-2 ring-library-800' : 'border-slate-300 bg-slate-50 hover:bg-white'} flex flex-col justify-between"
+          >
+            <div>
+              <p class="text-xs font-bold text-slate-900 truncate" title="${staffName}">${staffName.split(' ')[0]} ${staffName.split(' ')[1] || ''}</p>
+              <div class="mt-1 flex items-baseline justify-between">
+                <span class="text-lg font-black text-slate-900">${data.total}</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${badgeStyle}">${data.total} active</span>
+              </div>
+            </div>
+            ${data.overdue > 0 ? `
+              <p class="text-[11px] font-bold text-rose-700 mt-1 flex items-center gap-1">
+                <span>⚠️ ${data.overdue} overdue</span>
+              </p>
+            ` : `
+              <p class="text-[10px] font-semibold text-slate-500 mt-1">${statusLabel}</p>
+            `}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function handleStaffCardClick(staffName) {
+      const staffSelect = document.getElementById('filterStaff');
+      if (staffSelect.value === staffName) {
+        staffSelect.value = 'ALL';
+      } else {
+        staffSelect.value = staffName;
+      }
+      renderDashboard();
+    }
+
+    function renderBrainDumps() {
+      const list = document.getElementById('brainDumpList');
+      const count = document.getElementById('brainDumpCount');
+      if (!list) return;
+
+      count.textContent = brainDumps.length;
+
+      if (brainDumps.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500 italic p-2">No notes jotted down right now.</p>`;
+        return;
+      }
+
+      list.innerHTML = brainDumps.map(dump => `
+        <div class="bg-white p-2.5 rounded-lg border border-amber-300 text-xs text-slate-900 flex items-start justify-between gap-2 shadow-2xs">
+          <p class="font-medium flex-1 break-words">${dump.text}</p>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button 
+              type="button" 
+              onclick="convertBrainDumpToTask('${dump.id}')" 
+              title="Turn into full task" 
+              class="touch-target px-2 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold rounded text-[11px] transition"
+            >
+              Turn into Task &rarr;
+            </button>
+            <button 
+              type="button" 
+              onclick="deleteBrainDump('${dump.id}')" 
+              title="Dismiss note" 
+              aria-label="Dismiss note"
+              class="touch-target text-slate-400 hover:text-rose-700 p-1 rounded"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function convertBrainDumpToTask(dumpId) {
+      const item = brainDumps.find(d => d.id === dumpId);
+      if (!item) return;
+
+      openTaskModal();
+      document.getElementById('taskName').value = item.text;
+      document.getElementById('taskForm').dataset.convertedFrom = dumpId;
+    }
+
+    function deleteBrainDump(dumpId) {
+      brainDumps = brainDumps.filter(d => d.id !== dumpId);
+      saveBrainDumps();
+      announceToScreenReader('Note dismissed');
+    }
+
+    function populateStaffFilterOptions() {
+      const filterStaff = document.getElementById('filterStaff');
+      const quickStaffSelect = document.getElementById('quickStaffSelect');
+      const staffDatalist = document.getElementById('staffDatalist');
+      const archiveStaff = document.getElementById('archiveStaffFilter');
+
+      const staffSet = new Set(['Elena Ruiz (Circulation & Desk)', 'Sarah Miller (Director)', 'David Patel (Youth Services)', 'Marcus Vance (Cataloging & Tech)']);
+      tasks.forEach(t => { if (t.staff) staffSet.add(t.staff); });
+
+      const sorted = Array.from(staffSet).sort();
+      const optionsHtml = sorted.map(s => `<option value="${s}">${s}</option>`).join('');
+
+      if (filterStaff) {
+        const cur = filterStaff.value;
+        filterStaff.innerHTML = `<option value="ALL">All Staff</option>` + optionsHtml;
+        filterStaff.value = cur || 'ALL';
+      }
+      if (archiveStaff) {
+        const cur = archiveStaff.value;
+        archiveStaff.innerHTML = `<option value="ALL">All Staff</option>` + optionsHtml;
+        archiveStaff.value = cur || 'ALL';
+      }
+      if (quickStaffSelect) {
+        quickStaffSelect.innerHTML = `<option value="Unassigned">Assign: Unassigned</option>` + optionsHtml;
+      }
+      if (staffDatalist) {
+        staffDatalist.innerHTML = sorted.map(s => `<option value="${s}">`).join('');
+      }
+    }
+
+    function populateEventFilterOptions() {
+      const filterEvent = document.getElementById('filterEvent');
+      const eventsDatalist = document.getElementById('eventsDatalist');
+
+      const eventSet = new Set(['Teen Anime & Origami Night', 'Toddler Storytime', 'Monthly Board Meeting', 'Summer Reading Club', 'Adult Book Discussion']);
+      tasks.forEach(t => { if (t.event) eventSet.add(t.event); });
+
+      const sorted = Array.from(eventSet).sort();
+
+      if (filterEvent) {
+        const cur = filterEvent.value;
+        filterEvent.innerHTML = `
+          <option value="ALL">All Events & Programs</option>
+          <option value="__ANY__">Any with Event</option>
+          ${sorted.map(e => `<option value="${e}">${e}</option>`).join('')}
+        `;
+        filterEvent.value = cur || 'ALL';
+      }
+      if (eventsDatalist) {
+        eventsDatalist.innerHTML = sorted.map(e => `<option value="${e}">`).join('');
+      }
+    }
+
+    function buildTaskCardHtml(task) {
+      const isOverdue = (task.status !== 'Complete' && task.dueDate < todayStr);
+      const isDueToday = (task.dueDate === todayStr);
+      const categoryColor = CATEGORY_COLORS[task.category] || CATEGORY_COLORS['Other'];
+
+      return `
+        <div 
+          class="bg-white rounded-xl p-4 border-2 transition shadow-2xs hover:shadow-md ${isOverdue ? 'border-rose-400 bg-rose-50/20' : 'border-slate-300'}"
+          id="task-card-${task.id}"
+        >
+          <div class="flex items-center justify-between gap-1.5 mb-2 flex-wrap">
+            <span class="inline-flex items-center text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}">
+              ${task.category}
+            </span>
+
+            <div class="flex items-center gap-1">
+              ${task.priority === 'High' ? `
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-black uppercase text-rose-900 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded">
+                  ⚡ High
+                </span>
+              ` : task.priority === 'Medium' ? `
+                <span class="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                  Med
+                </span>
+              ` : `
+                <span class="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                  Low
+                </span>
+              `}
+
+              ${task.recurrence && task.recurrence !== 'None' ? `
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-bold text-library-900 bg-library-100 border border-library-300 px-1.5 py-0.5 rounded" title="Repeats ${task.recurrence}">
+                  🔁 ${task.recurrence}
+                </span>
+              ` : ''}
+            </div>
+          </div>
+
+          <h4 class="text-sm font-extrabold text-slate-900 leading-snug break-words">
+            ${task.name}
+          </h4>
+
+          ${task.event ? `
+            <div class="mt-1.5">
+              <span class="inline-flex items-center gap-1 text-[11px] font-bold text-pink-900 bg-pink-50 border border-pink-200 px-2 py-0.5 rounded-md">
+                🎫 ${task.event}
+              </span>
+            </div>
+          ` : ''}
+
+          ${task.description ? `
+            <p class="text-xs text-slate-600 font-medium mt-1.5 line-clamp-2 leading-relaxed">
+              ${task.description}
+            </p>
+          ` : ''}
+
+          ${task.linkUrl ? `
+            <div class="mt-2">
+              <a 
+                href="${task.linkUrl.startsWith('http') ? task.linkUrl : 'https://' + task.linkUrl}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="inline-flex items-center gap-1 text-xs font-bold text-library-800 hover:text-library-950 bg-library-50 hover:bg-library-100 px-2 py-1 rounded border border-library-300 transition"
+              >
+                <span>🔗 ${task.linkLabel || 'Attached Link'}</span>
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+            </div>
+          ` : ''}
+
+          <div class="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700">
+            <span class="flex items-center gap-1 truncate max-w-[130px]" title="${task.staff}">
+              👤 ${task.staff.split(' ')[0]}
+            </span>
+
+            <span class="${isOverdue ? 'text-rose-700 font-extrabold flex items-center gap-1' : isDueToday ? 'text-amber-800 font-extrabold' : 'text-slate-600'}">
+              ${isOverdue ? `⚠️ Overdue (${task.dueDate})` : isDueToday ? `Due Today` : `Due ${task.dueDate}`}
+            </span>
+          </div>
+
+          <div class="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between gap-1">
+            <label for="status-select-${task.id}" class="sr-only">Change Status</label>
+            <select 
+              id="status-select-${task.id}" 
+              onchange="changeTaskStatus('${task.id}', this.value)" 
+              class="touch-target text-xs font-extrabold px-2 py-1 border border-slate-300 rounded bg-slate-50 text-slate-800 focus:outline-none focus:border-library-700"
+            >
+              <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+              <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+              <option value="Waiting" ${task.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
+              <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
+            </select>
+
+            <div class="flex items-center gap-1">
+              <button 
+                type="button" 
+                onclick="openEditTaskModal('${task.id}')" 
+                title="Edit task" 
+                class="touch-target p-1.5 rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button 
+                type="button" 
+                onclick="promptDeleteTask('${task.id}')" 
+                title="Delete task" 
+                class="touch-target p-1.5 rounded text-slate-400 hover:text-rose-700 hover:bg-rose-50 transition"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function matchesFilters(task) {
+      const searchVal = document.getElementById('filterSearch').value.toLowerCase().trim();
+      const catVal = document.getElementById('filterCategory').value;
+      const staffVal = document.getElementById('filterStaff').value;
+      const eventVal = document.getElementById('filterEvent').value;
+      const priorityVal = document.getElementById('filterPriority').value;
+      const recVal = document.getElementById('filterRecurrence').value;
+
+      if (activeCardFilter === 'dueToday' && (task.dueDate !== todayStr || task.status === 'Complete')) return false;
+      if (activeCardFilter === 'overdue' && (task.dueDate >= todayStr || task.status === 'Complete')) return false;
+      if (activeCardFilter === 'highPriority' && (task.priority !== 'High' || task.status === 'Complete')) return false;
+
+      if (searchVal) {
+        const text = `${task.name} ${task.description || ''} ${task.staff} ${task.event || ''} ${task.linkLabel || ''}`.toLowerCase();
+        if (!text.includes(searchVal)) return false;
+      }
+
+      if (catVal !== 'ALL' && task.category !== catVal) return false;
+      if (staffVal !== 'ALL' && task.staff !== staffVal) return false;
+      
+      if (eventVal === '__ANY__' && !task.event) return false;
+      if (eventVal !== 'ALL' && eventVal !== '__ANY__' && task.event !== eventVal) return false;
+
+      if (priorityVal !== 'ALL' && task.priority !== priorityVal) return false;
+
+      if (recVal === 'RECURRING' && (!task.recurrence || task.recurrence === 'None')) return false;
+      if (recVal !== 'ALL' && recVal !== 'RECURRING' && task.recurrence !== recVal) return false;
+
+      return true;
+    }
+
+    function renderDashboard() {
+      renderSummaryCards();
+      renderStaffWorkload();
+
+      if (mainActiveView === 'today') {
+        renderTodayView();
+        return;
+      }
+      if (mainActiveView === 'weekly') {
+        renderWeeklyView();
+        return;
+      }
+      if (mainActiveView === 'calendar') {
+        renderCalendarView();
+        return;
+      }
+      if (mainActiveView === 'archive') {
+        renderArchiveView();
+        return;
+      }
+
+      const filtered = tasks.filter(matchesFilters);
+
+      const activePill = document.getElementById('activeFilterBadge');
+      const hasActive = (
+        activeCardFilter !== null ||
+        document.getElementById('filterSearch').value.trim() !== '' ||
+        document.getElementById('filterCategory').value !== 'ALL' ||
+        document.getElementById('filterStaff').value !== 'ALL' ||
+        document.getElementById('filterEvent').value !== 'ALL' ||
+        document.getElementById('filterPriority').value !== 'ALL' ||
+        document.getElementById('filterRecurrence').value !== 'ALL'
+      );
+      if (activePill) {
+        if (hasActive) activePill.classList.remove('hidden');
+        else activePill.classList.add('hidden');
+      }
+
+      document.getElementById('taskCountText').textContent = `Showing ${filtered.length} of ${tasks.length} tasks`;
+
+      if (subActiveView === 'board') {
+        renderBoardView(filtered);
+      } else {
+        renderListView(filtered);
+      }
+      safeRenderIcons();
+    }
+
+    function renderBoardView(filteredTasks) {
+      document.getElementById('boardColumnsContainer').classList.remove('hidden');
+      document.getElementById('listViewContainer').classList.add('hidden');
+
+      const colNotStarted = document.getElementById('colListNotStarted');
+      const colInProgress = document.getElementById('colListInProgress');
+      const colWaiting = document.getElementById('colListWaiting');
+      const colComplete = document.getElementById('colListComplete');
+
+      colNotStarted.innerHTML = '';
+      colInProgress.innerHTML = '';
+      colWaiting.innerHTML = '';
+      colComplete.innerHTML = '';
+
+      let cNotStarted = 0, cInProgress = 0, cWaiting = 0, cComplete = 0;
+
+      filteredTasks.forEach(task => {
+        const cardHtml = buildTaskCardHtml(task);
+        if (task.status === 'Not Started') {
+          colNotStarted.insertAdjacentHTML('beforeend', cardHtml);
+          cNotStarted++;
+        } else if (task.status === 'In Progress') {
+          colInProgress.insertAdjacentHTML('beforeend', cardHtml);
+          cInProgress++;
+        } else if (task.status === 'Waiting') {
+          colWaiting.insertAdjacentHTML('beforeend', cardHtml);
+          cWaiting++;
+        } else if (task.status === 'Complete') {
+          colComplete.insertAdjacentHTML('beforeend', cardHtml);
+          cComplete++;
+        }
+      });
+
+      document.getElementById('colCountNotStarted').textContent = cNotStarted;
+      document.getElementById('colCountInProgress').textContent = cInProgress;
+      document.getElementById('colCountWaiting').textContent = cWaiting;
+      document.getElementById('colCountComplete').textContent = cComplete;
+
+      checkEmptyColumn(colNotStarted, 'No not-started tasks');
+      checkEmptyColumn(colInProgress, 'No tasks in progress');
+      checkEmptyColumn(colWaiting, 'No waiting tasks');
+      checkEmptyColumn(colComplete, 'No completed tasks');
+    }
+
+    function renderListView(filteredTasks) {
+      document.getElementById('boardColumnsContainer').classList.add('hidden');
+      document.getElementById('listViewContainer').classList.remove('hidden');
+
+      const tbody = document.getElementById('listTableBody');
+      if (filteredTasks.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500 font-bold">No tasks match your filters.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredTasks.map(task => {
+        const isOverdue = (task.status !== 'Complete' && task.dueDate < todayStr);
+        const categoryColor = CATEGORY_COLORS[task.category] || CATEGORY_COLORS['Other'];
+
+        return `
+          <tr class="hover:bg-slate-50 transition ${isOverdue ? 'bg-rose-50/30' : ''}">
+            <td class="py-3 px-4 font-bold text-slate-900">
+              <div>${task.name}</div>
+              ${task.event ? `<span class="text-[11px] font-semibold text-pink-800">🎫 ${task.event}</span>` : ''}
+              ${task.linkUrl ? `
+                <a href="${task.linkUrl.startsWith('http') ? task.linkUrl : 'https://' + task.linkUrl}" target="_blank" rel="noopener noreferrer" class="ml-2 text-[11px] font-bold text-library-700 underline">
+                  🔗 ${task.linkLabel || 'Link'}
+                </a>
+              ` : ''}
+            </td>
+            <td class="py-3 px-4 text-slate-700 font-semibold">${task.staff}</td>
+            <td class="py-3 px-4 ${isOverdue ? 'text-rose-700 font-extrabold' : 'text-slate-700'}">
+              ${isOverdue ? `⚠️ ${task.dueDate}` : task.dueDate}
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-xs font-bold ${task.priority === 'High' ? 'text-rose-700' : task.priority === 'Medium' ? 'text-amber-800' : 'text-slate-600'}">
+                ${task.priority}
+              </span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}">
+                ${task.category}
+              </span>
+            </td>
+            <td class="py-3 px-4 font-extrabold">
+              <select onchange="changeTaskStatus('${task.id}', this.value)" class="text-xs border border-slate-300 rounded px-2 py-1 bg-white">
+                <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                <option value="Waiting" ${task.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
+                <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
+              </select>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <button type="button" onclick="openEditTaskModal('${task.id}')" class="text-slate-600 hover:text-slate-900 font-bold mr-2">Edit</button>
+              <button type="button" onclick="promptDeleteTask('${task.id}')" class="text-rose-700 hover:text-rose-900 font-bold">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTodayView() {
+      const container = document.getElementById('todayCardsContainer');
+      const activeTasks = tasks.filter(t => t.status !== 'Complete');
+
+      const focusTasks = activeTasks.filter(t => (
+        t.dueDate === todayStr ||
+        t.dueDate < todayStr ||
+        t.priority === 'High' ||
+        t.status === 'In Progress'
+      ));
+
+      if (focusTasks.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500 font-bold">
+            All clear for today! No overdue, today-due, high-priority, or in-progress tasks.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = focusTasks.map(t => buildTaskCardHtml(t)).join('');
+    }
+
+    function renderWeeklyView() {
+      const grid = document.getElementById('weeklyColumnsGrid');
+      const label = document.getElementById('weeklyDateRangeLabel');
+
+      const d = new Date(weeklyDate);
+      const dayOfWeek = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - dayOfWeek);
+
+      const monday = new Date(d);
+      const friday = new Date(d);
+      friday.setDate(monday.getDate() + 4);
+
+      label.textContent = `${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${friday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const dayColumns = [];
+
+      for (let i = 0; i < 5; i++) {
+        const cur = new Date(monday);
+        cur.setDate(monday.getDate() + i);
+        const iso = formatDateIso(cur);
+        dayColumns.push({
+          name: days[i],
+          iso: iso,
+          label: cur.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        });
+      }
+
+      grid.innerHTML = dayColumns.map(col => {
+        const dayTasks = tasks.filter(t => t.status !== 'Complete' && t.dueDate === col.iso);
+        const isCurrentDay = (col.iso === todayStr);
+
+        return `
+          <div class="bg-white border-2 ${isCurrentDay ? 'border-amber-400 ring-2 ring-amber-200' : 'border-slate-300'} rounded-2xl p-3 flex flex-col min-h-[460px]">
+            <div class="pb-2.5 mb-2.5 border-b-2 border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-black uppercase text-slate-900">${col.name}</h3>
+                <span class="text-xs font-semibold ${isCurrentDay ? 'text-amber-800 font-bold' : 'text-slate-500'}">${col.label}</span>
+              </div>
+              <span class="text-xs font-black bg-slate-100 px-2 py-0.5 rounded">${dayTasks.length}</span>
+            </div>
+
+            <div class="space-y-2 flex-1 overflow-y-auto" ondragover="handleDragOver(event)" ondrop="handleDrop(event, '${col.iso}')">
+              ${dayTasks.map(t => `
+                <div draggable="true" ondragstart="handleDragStart(event, '${t.id}')" class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl cursor-grab text-xs space-y-1">
+                  <div class="font-extrabold text-slate-900">${t.name}</div>
+                  <div class="text-[11px] text-slate-600 flex justify-between">
+                    <span>${t.staff.split(' ')[0]}</span>
+                    <span class="font-bold ${t.priority === 'High' ? 'text-rose-700' : ''}">${t.priority}</span>
+                  </div>
+                  <div class="pt-1 flex items-center justify-between border-t border-slate-200">
+                    <select onchange="moveTaskDate('${t.id}', this.value)" class="text-[10px] border border-slate-300 rounded px-1 py-0.5 bg-white">
+                      <option value="">Move to...</option>
+                      ${dayColumns.map(dc => `<option value="${dc.iso}">${dc.name}</option>`).join('')}
+                      <option value="later">Later</option>
+                    </select>
+                    <button type="button" onclick="openEditTaskModal('${t.id}')" class="text-[11px] text-library-800 font-bold">Edit</button>
+                  </div>
+                </div>
+              `).join('')}
+              ${dayTasks.length === 0 ? `<div class="p-4 text-center text-slate-400 font-medium text-xs">No tasks scheduled</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('') + `
+        <!-- Later Column -->
+        <div class="bg-slate-100 border-2 border-slate-300 rounded-2xl p-3 flex flex-col min-h-[460px]">
+          <div class="pb-2.5 mb-2.5 border-b-2 border-slate-300 flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-black uppercase text-slate-900">Later / Next Week</h3>
+              <span class="text-xs font-semibold text-slate-500">Upcoming queue</span>
+            </div>
+          </div>
+          <div class="space-y-2 flex-1 overflow-y-auto" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'later')">
+            ${tasks.filter(t => t.status !== 'Complete' && t.dueDate > formatDateIso(friday)).map(t => `
+              <div draggable="true" ondragstart="handleDragStart(event, '${t.id}')" class="p-2.5 bg-white border border-slate-300 rounded-xl text-xs space-y-1">
+                <div class="font-extrabold text-slate-900">${t.name}</div>
+                <div class="text-[11px] text-slate-600 flex justify-between">
+                  <span>${t.staff.split(' ')[0]}</span>
+                  <span>Due ${t.dueDate}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function handleDragStart(e, taskId) {
+      e.dataTransfer.setData('text/plain', taskId);
+    }
+    function handleDragOver(e) {
+      e.preventDefault();
+    }
+    function handleDrop(e, targetIso) {
+      e.preventDefault();
+      const taskId = e.dataTransfer.getData('text/plain');
+      if (!taskId) return;
+      moveTaskDate(taskId, targetIso);
+    }
+    function moveTaskDate(taskId, targetIso) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task || !targetIso) return;
+
+      if (targetIso === 'later') {
+        const nextWk = new Date();
+        nextWk.setDate(nextWk.getDate() + 10);
+        task.dueDate = formatDateIso(nextWk);
+      } else {
+        task.dueDate = targetIso;
+      }
+
+      saveTasks();
+      announceToScreenReader(`Task rescheduled to ${task.dueDate}`);
+      showToast(`Task moved to ${task.dueDate}`);
+    }
+
+    function renderCalendarView() {
+      const label = document.getElementById('calendarMonthYearLabel');
+      const grid = document.getElementById('calendarDaysGrid');
+
+      const y = calendarDate.getFullYear();
+      const m = calendarDate.getMonth();
+
+      label.textContent = new Date(y, m, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      const firstDayOfMonth = new Date(y, m, 1).getDay();
+      const totalDaysInMonth = new Date(y, m + 1, 0).getDate();
+
+      let cells = '';
+
+      for (let i = 0; i < firstDayOfMonth; i++) {
+        cells += `<div class="bg-slate-50/50 p-2 min-h-[90px]"></div>`;
+      }
+
+      for (let d = 1; d <= totalDaysInMonth; d++) {
+        const curDate = new Date(y, m, d);
+        const curIso = formatDateIso(curDate);
+        const dayTasks = tasks.filter(t => t.dueDate === curIso);
+        const isCurrentDay = (curIso === todayStr);
+
+        cells += `
+          <div class="p-2 min-h-[100px] bg-white transition hover:bg-slate-50 flex flex-col justify-between group relative">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-black ${isCurrentDay ? 'w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center font-extrabold' : 'text-slate-800'}">
+                ${d}
+              </span>
+              <button type="button" onclick="quickAddTaskForDate('${curIso}')" title="Add task for this day" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-900 font-black text-xs px-1">
+                +
+              </button>
+            </div>
+
+            <div class="space-y-1 flex-1 overflow-y-auto max-h-20">
+              ${dayTasks.slice(0, 3).map(t => `
+                <button 
+                  type="button" 
+                  onclick="openEditTaskModal('${t.id}')" 
+                  class="w-full text-left truncate text-[10px] font-bold px-1.5 py-0.5 rounded border block ${t.status === 'Complete' ? 'line-through text-slate-400 bg-slate-100 border-slate-200' : t.priority === 'High' ? 'text-rose-900 bg-rose-100 border-rose-300' : 'text-library-950 bg-library-100 border-library-300'}"
+                >
+                  ${t.name}
+                </button>
+              `).join('')}
+              ${dayTasks.length > 3 ? `<span class="text-[10px] font-bold text-slate-500 block">+${dayTasks.length - 3} more</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = cells;
+    }
+
+    function quickAddTaskForDate(isoDate) {
+      openTaskModal();
+      document.getElementById('taskDueDate').value = isoDate;
+    }
+
+    function renderArchiveView() {
+      const tbody = document.getElementById('archiveTableBody');
+      const search = document.getElementById('archiveSearchInput').value.toLowerCase().trim();
+      const staffVal = document.getElementById('archiveStaffFilter').value;
+
+      const completed = tasks.filter(t => t.status === 'Complete');
+
+      const filtered = completed.filter(t => {
+        if (staffVal !== 'ALL' && t.staff !== staffVal) return false;
+        if (search) {
+          const text = `${t.name} ${t.description || ''} ${t.staff} ${t.event || ''}`.toLowerCase();
+          if (!text.includes(search)) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500 font-bold">No completed tasks in archive matching your search.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(t => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-4 font-bold text-slate-900">
+            <div>${t.name}</div>
+            ${t.event ? `<span class="text-[11px] font-semibold text-pink-800">🎫 ${t.event}</span>` : ''}
+          </td>
+          <td class="py-3 px-4 text-slate-700 font-semibold">${t.staff}</td>
+          <td class="py-3 px-4">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border bg-slate-100 text-slate-800 border-slate-300">
+              ${t.category}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-slate-600 text-xs">
+            ${t.completedAt ? new Date(t.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Earlier'}
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button type="button" onclick="reopenTask('${t.id}')" class="text-emerald-700 hover:text-emerald-900 font-bold text-xs mr-3">
+              Reopen
+            </button>
+            <button type="button" onclick="promptDeleteTask('${t.id}')" class="text-rose-700 hover:text-rose-900 font-bold text-xs">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function reopenTask(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      task.status = 'In Progress';
+      task.completedAt = undefined;
+      saveTasks();
+      showToast(`"${task.name}" reopened back to In Progress.`);
+      announceToScreenReader('Task reopened');
+      renderDashboard();
+    }
+
+    function changeTaskStatus(taskId, newStatus) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      task.status = newStatus;
+
+      if (newStatus === 'Complete') {
+        task.completedAt = Date.now();
+        showToast(`Task marked Complete!`);
+
+        if (task.recurrence && task.recurrence !== 'None') {
+          const nextDate = computeNextDueDate(task.dueDate, task.recurrence);
+          const nextTask = {
+            ...task,
+            id: 'task-' + Date.now(),
+            dueDate: nextDate,
+            status: 'Not Started',
+            createdAt: Date.now(),
+            completedAt: undefined
+          };
+          tasks.unshift(nextTask);
+          showToast(`Next ${task.recurrence} repetition scheduled for ${nextDate}`);
+          announceToScreenReader(`Next recurrence scheduled for ${nextDate}`);
+        }
+      } else {
+        task.completedAt = undefined;
+      }
+
+      saveTasks();
+    }
+
+    const taskModal = document.getElementById('taskModal');
+    const taskForm = document.getElementById('taskForm');
+
+    function openTaskModal() {
+      lastActiveElement = document.activeElement;
+      taskForm.reset();
+      document.getElementById('taskId').value = '';
+      document.getElementById('taskDueDate').value = todayStr;
+      document.getElementById('taskPriority').value = 'Medium';
+      document.getElementById('taskCategory').value = 'Circulation';
+      document.getElementById('taskStatus').value = 'Not Started';
+      document.getElementById('taskRecurrence').value = 'None';
+      document.getElementById('taskModalTitle').textContent = 'Add Library Task';
+      document.getElementById('saveTaskBtnText').textContent = 'Save Task';
+      delete taskForm.dataset.convertedFrom;
+
+      taskModal.classList.remove('hidden');
+      document.getElementById('taskName').focus();
+      safeRenderIcons();
+    }
+
+    function openEditTaskModal(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      lastActiveElement = document.activeElement;
+      document.getElementById('taskId').value = task.id;
+      document.getElementById('taskName').value = task.name;
+      document.getElementById('taskDescription').value = task.description || '';
+      document.getElementById('taskStaff').value = task.staff;
+      document.getElementById('taskDueDate').value = task.dueDate;
+      document.getElementById('taskPriority').value = task.priority;
+      document.getElementById('taskCategory').value = task.category;
+      document.getElementById('taskStatus').value = task.status;
+      document.getElementById('taskRecurrence').value = task.recurrence || 'None';
+      document.getElementById('taskEvent').value = task.event || '';
+      document.getElementById('taskLinkUrl').value = task.linkUrl || '';
+      document.getElementById('taskLinkLabel').value = task.linkLabel || '';
+
+      document.getElementById('taskModalTitle').textContent = 'Edit Library Task';
+      document.getElementById('saveTaskBtnText').textContent = 'Update Task';
+
+      taskModal.classList.remove('hidden');
+      document.getElementById('taskName').focus();
+      safeRenderIcons();
+    }
+
+    function closeTaskModal() {
+      taskModal.classList.add('hidden');
+      if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+        lastActiveElement.focus();
+      }
+    }
+
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('taskId').value;
+      const name = document.getElementById('taskName').value.trim();
+      const description = document.getElementById('taskDescription').value.trim();
+      const staff = document.getElementById('taskStaff').value.trim();
+      const dueDate = document.getElementById('taskDueDate').value;
+      const priority = document.getElementById('taskPriority').value;
+      const category = document.getElementById('taskCategory').value;
+      const status = document.getElementById('taskStatus').value;
+      const recurrence = document.getElementById('taskRecurrence').value;
+      const eventVal = document.getElementById('taskEvent').value.trim();
+      const linkUrl = document.getElementById('taskLinkUrl').value.trim();
+      const linkLabel = document.getElementById('taskLinkLabel').value.trim();
+
+      if (!name || !staff || !dueDate) {
+        showToast('Please fill out all required fields.', true);
+        return;
+      }
+
+      if (id) {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+          task.name = name;
+          task.description = description;
+          task.staff = staff;
+          task.dueDate = dueDate;
+          task.priority = priority;
+          task.category = category;
+          task.status = status;
+          task.recurrence = recurrence;
+          task.event = eventVal;
+          task.linkUrl = linkUrl;
+          task.linkLabel = linkLabel;
+          if (status === 'Complete' && !task.completedAt) task.completedAt = Date.now();
+          showToast(`Task "${name}" updated.`);
+        }
+      } else {
+        const newTask = {
+          id: 'task-' + Date.now(),
+          name,
+          description,
+          staff,
+          dueDate,
+          priority,
+          category,
+          status,
+          recurrence,
+          event: eventVal,
+          linkUrl,
+          linkLabel,
+          createdAt: Date.now(),
+          completedAt: status === 'Complete' ? Date.now() : undefined
+        };
+        tasks.unshift(newTask);
+        showToast(`Task "${name}" added.`);
+
+        if (taskForm.dataset.convertedFrom) {
+          brainDumps = brainDumps.filter(d => d.id !== taskForm.dataset.convertedFrom);
+          saveBrainDumps();
+        }
+      }
+
+      saveTasks();
+      closeTaskModal();
+      announceToScreenReader(`Task saved: ${name}`);
+    });
+
+    const deleteModal = document.getElementById('deleteModal');
+
+    function promptDeleteTask(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      taskPendingDelete = taskId;
+      document.getElementById('deleteTaskTitle').textContent = `"${task.name}"`;
+      lastActiveElement = document.activeElement;
+      deleteModal.classList.remove('hidden');
+      document.getElementById('confirmDeleteBtn').focus();
+    }
+
+    document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+      deleteModal.classList.add('hidden');
+      taskPendingDelete = null;
+      if (lastActiveElement) lastActiveElement.focus();
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+      if (!taskPendingDelete) return;
+      tasks = tasks.filter(t => t.id !== taskPendingDelete);
+      saveTasks();
+      deleteModal.classList.add('hidden');
+      taskPendingDelete = null;
+      showToast('Task permanently deleted.');
+      announceToScreenReader('Task permanently deleted');
+      if (lastActiveElement) lastActiveElement.focus();
+    });
+
+    document.getElementById('quickAddForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('quickTaskName');
+      const staffSelect = document.getElementById('quickStaffSelect');
+      const name = nameInput.value.trim();
+      const staff = staffSelect.value || 'Unassigned';
+
+      if (!name) return;
+
+      const newTask = {
+        id: 'task-' + Date.now(),
+        name,
+        description: '',
+        staff: staff === 'Unassigned' ? 'Unassigned (Needs Lead)' : staff,
+        dueDate: todayStr,
+        priority: 'Medium',
+        category: 'Circulation',
+        status: 'Not Started',
+        recurrence: 'None',
+        event: '',
+        linkUrl: '',
+        linkLabel: '',
+        createdAt: Date.now()
+      };
+
+      tasks.unshift(newTask);
+      saveTasks();
+      nameInput.value = '';
+      showToast(`Quick task added! Click edit to add more details.`);
+      announceToScreenReader(`Quick task added: ${name}`);
+    });
+
+    document.getElementById('brainDumpForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('brainDumpInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      brainDumps.unshift({ id: 'bd-' + Date.now(), text });
+      saveBrainDumps();
+      input.value = '';
+      showToast('Thought jotted down in Brain Dump!');
+      announceToScreenReader('Note added to Brain Dump');
+    });
+
+    const templateModal = document.getElementById('templateModal');
+    const templateSelect = document.getElementById('templateSelect');
+
+    const TEMPLATE_DEFINITIONS = {
+      program: {
+        title: 'Teen Anime & Origami Night',
+        staff: 'Elena Ruiz (Circulation & Desk)',
+        category: 'Programming',
+        tasks: [
+          { name: 'Choose date and confirm library room availability', offsetDays: -28, priority: 'High' },
+          { name: 'Reserve space and equipment in calendar system', offsetDays: -25, priority: 'Medium' },
+          { name: 'Purchase supplies (paper, markers, snacks)', offsetDays: -14, priority: 'High' },
+          { name: 'Create promotional materials & flyers', offsetDays: -20, priority: 'High' },
+          { name: 'Post on social media channels', offsetDays: -10, priority: 'Medium' },
+          { name: 'Add event to website calendar', offsetDays: -21, priority: 'High' },
+          { name: 'Prepare room and arrange chairs & tables', offsetDays: -1, priority: 'Medium' },
+          { name: 'Run program & welcome patrons', offsetDays: 0, priority: 'High' },
+          { name: 'Collect attendance head-count', offsetDays: 0, priority: 'Medium' },
+          { name: 'Gather feedback & patron comments', offsetDays: 1, priority: 'Low' },
+          { name: 'Clean up room & restock supply closet', offsetDays: 0, priority: 'Medium' }
+        ]
+      },
+      board: {
+        title: 'Monthly Board Meeting',
+        staff: 'Sarah Miller (Director)',
+        category: 'Board/Administration',
+        tasks: [
+          { name: 'Gather circulation statistics from ILS', offsetDays: -7, priority: 'High' },
+          { name: 'Gather program attendance numbers', offsetDays: -7, priority: 'Medium' },
+          { name: 'Update budget and expense information', offsetDays: -5, priority: 'High' },
+          { name: 'Write director\'s monthly report', offsetDays: -4, priority: 'High' },
+          { name: 'Prepare board meeting agenda', offsetDays: -4, priority: 'High' },
+          { name: 'Send board packet via email to trustees', offsetDays: -3, priority: 'High' },
+          { name: 'Print physical meeting packets for attendees', offsetDays: -1, priority: 'Medium' },
+          { name: 'Record follow-up tasks and minutes after the meeting', offsetDays: 1, priority: 'Medium' }
+        ]
+      },
+      promote: {
+        title: 'Author Visit: Local History Talk',
+        staff: 'Elena Ruiz (Circulation & Desk)',
+        category: 'Marketing/Social Media',
+        tasks: [
+          { name: 'Create flyer in Canva', offsetDays: -21, priority: 'High' },
+          { name: 'Add event to website events calendar', offsetDays: -21, priority: 'High' },
+          { name: 'Create Facebook event & Instagram post', offsetDays: -14, priority: 'Medium' },
+          { name: 'Schedule reminder post for 48 hours prior', offsetDays: -2, priority: 'High' },
+          { name: 'Create in-library signage at front circulation desk', offsetDays: -10, priority: 'Medium' },
+          { name: 'Contact community partners and senior center', offsetDays: -10, priority: 'Low' },
+          { name: 'Send email/newsletter blast to subscriber list', offsetDays: -7, priority: 'Medium' }
+        ]
+      }
+    };
+
+    function renderTemplatePreview() {
+      const type = templateSelect.value;
+      const tpl = TEMPLATE_DEFINITIONS[type];
+      if (!tpl) return;
+
+      document.getElementById('templateProgramName').value = tpl.title;
+      document.getElementById('templateStaffLead').value = tpl.staff;
+
+      const container = document.getElementById('templateItemsList');
+      document.getElementById('templateItemCount').textContent = `${tpl.tasks.length} tasks`;
+
+      container.innerHTML = tpl.tasks.map((task, idx) => `
+        <div class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 text-xs">
+          <input type="checkbox" id="tpl_task_${idx}" checked class="rounded border-slate-300 text-library-700 focus:ring-library-700">
+          <label for="tpl_task_${idx}" class="font-bold text-slate-800 flex-1 truncate">${task.name}</label>
+          <span class="text-[10px] font-bold text-slate-500">${task.offsetDays <= 0 ? `${Math.abs(task.offsetDays)} days prior` : `+${task.offsetDays} days after`}</span>
+        </div>
+      `).join('');
+    }
+
+    templateSelect.addEventListener('change', renderTemplatePreview);
+
+    document.getElementById('openTemplatesBtn').addEventListener('click', () => {
+      lastActiveElement = document.activeElement;
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 28);
+      document.getElementById('templateEventDate').value = formatDateIso(targetDate);
+      renderTemplatePreview();
+      templateModal.classList.remove('hidden');
+    });
+
+    document.getElementById('closeTemplateModalBtn').addEventListener('click', () => templateModal.classList.add('hidden'));
+    document.getElementById('cancelTemplateModalBtn').addEventListener('click', () => templateModal.classList.add('hidden'));
+
+    document.getElementById('btnGenerateTemplateTasks').addEventListener('click', () => {
+      const type = templateSelect.value;
+      const tpl = TEMPLATE_DEFINITIONS[type];
+      const programName = document.getElementById('templateProgramName').value.trim();
+      const eventDateStr = document.getElementById('templateEventDate').value;
+      const staffLead = document.getElementById('templateStaffLead').value.trim() || 'Elena Ruiz (Circulation & Desk)';
+
+      if (!programName || !eventDateStr) {
+        showToast('Please provide a program name and date.', true);
+        return;
+      }
+
+      const eventDate = new Date(eventDateStr + 'T12:00:00');
+
+      let createdCount = 0;
+      tpl.tasks.forEach((task, idx) => {
+        const checkbox = document.getElementById(`tpl_task_${idx}`);
+        if (checkbox && !checkbox.checked) return;
+
+        const taskDate = new Date(eventDate);
+        taskDate.setDate(taskDate.getDate() + task.offsetDays);
+
+        const newTask = {
+          id: 'task-' + Date.now() + '-' + idx,
+          name: task.name,
+          description: `Auto-generated from template for ${programName}.`,
+          staff: staffLead,
+          dueDate: formatDateIso(taskDate),
+          priority: task.priority || 'Medium',
+          category: tpl.category || 'Programming',
+          status: 'Not Started',
+          recurrence: 'None',
+          event: programName,
+          linkUrl: '',
+          linkLabel: '',
+          createdAt: Date.now()
+        };
+
+        tasks.unshift(newTask);
+        createdCount++;
+      });
+
+      saveTasks();
+      templateModal.classList.add('hidden');
+      
+      document.getElementById('filterEvent').value = programName;
+      renderDashboard();
+      
+      showToast(`Created ${createdCount} template tasks for "${programName}"!`);
+      announceToScreenReader(`Created ${createdCount} template tasks`);
+    });
+
+    const backupModal = document.getElementById('backupModal');
+
+    function openBackupModal() {
+      lastActiveElement = document.activeElement;
+      backupModal.classList.remove('hidden');
+      safeRenderIcons();
+    }
+
+    function closeBackupModal() {
+      backupModal.classList.add('hidden');
+      if (lastActiveElement) lastActiveElement.focus();
+    }
+
+    document.getElementById('openBackupModalBtn').addEventListener('click', openBackupModal);
+    document.getElementById('closeBackupModalBtn').addEventListener('click', closeBackupModal);
+    document.getElementById('closeBackupModalBtn2').addEventListener('click', closeBackupModal);
+
+    // Export Tasks as JSON Download
+    document.getElementById('btnExportJson').addEventListener('click', () => {
+      const exportData = {
+        libraryName: 'Oak Creek Public Library',
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        tasks: tasks,
+        brainDumps: brainDumps
+      };
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `oakcreek_library_tasks_${todayStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast('Backup file downloaded successfully!');
+      announceToScreenReader('Backup downloaded');
+    });
+
+    // Import Tasks from JSON File
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (Array.isArray(imported.tasks)) {
+            tasks = imported.tasks;
+            if (Array.isArray(imported.brainDumps)) {
+              brainDumps = imported.brainDumps;
+            }
+            saveTasks();
+            saveBrainDumps();
+            closeBackupModal();
+            showToast(`Restored ${tasks.length} tasks and ${brainDumps.length} notes!`);
+            announceToScreenReader('Data restored successfully');
+          } else if (Array.isArray(imported)) {
+            tasks = imported;
+            saveTasks();
+            closeBackupModal();
+            showToast(`Restored ${tasks.length} tasks!`);
+          } else {
+            showToast('Invalid backup file format.', true);
+          }
+        } catch (err) {
+          showToast('Could not parse the backup file.', true);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // Reset Sample Data
+    document.getElementById('btnResetSampleData').addEventListener('click', () => {
+      tasks = JSON.parse(JSON.stringify(INITIAL_TASKS));
+      brainDumps = JSON.parse(JSON.stringify(INITIAL_BRAIN_DUMPS));
+      saveTasks();
+      saveBrainDumps();
+      closeBackupModal();
+      showToast('Dashboard reset to initial sample tasks.');
+    });
+
+    const navDashboardBtn = document.getElementById('navDashboardBtn');
+    const navTodayBtn = document.getElementById('navTodayBtn');
+    const navWeeklyBtn = document.getElementById('navWeeklyBtn');
+    const navCalendarBtn = document.getElementById('navCalendarBtn');
+    const navArchiveBtn = document.getElementById('navArchiveBtn');
+
+    function setActiveMainView(viewName) {
+      mainActiveView = viewName;
+
+      [navDashboardBtn, navTodayBtn, navWeeklyBtn, navCalendarBtn, navArchiveBtn].forEach(btn => {
+        btn.setAttribute('aria-current', 'false');
+        btn.className = 'touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition';
+      });
+
+      document.getElementById('viewDashboard').classList.add('hidden');
+      document.getElementById('viewToday').classList.add('hidden');
+      document.getElementById('viewWeekly').classList.add('hidden');
+      document.getElementById('viewCalendar').classList.add('hidden');
+      document.getElementById('viewArchive').classList.add('hidden');
+
+      if (viewName === 'dashboard') {
+        navDashboardBtn.setAttribute('aria-current', 'page');
+        navDashboardBtn.className = 'touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-library-950 shadow-xs transition';
+        document.getElementById('viewDashboard').classList.remove('hidden');
+      } else if (viewName === 'today') {
+        navTodayBtn.setAttribute('aria-current', 'page');
+        navTodayBtn.className = 'touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-amber-950 shadow-xs transition';
+        document.getElementById('viewToday').classList.remove('hidden');
+      } else if (viewName === 'weekly') {
+        navWeeklyBtn.setAttribute('aria-current', 'page');
+        navWeeklyBtn.className = 'touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-library-950 shadow-xs transition';
+        document.getElementById('viewWeekly').classList.remove('hidden');
+      } else if (viewName === 'calendar') {
+        navCalendarBtn.setAttribute('aria-current', 'page');
+        navCalendarBtn.className = 'touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-library-950 shadow-xs transition';
+        document.getElementById('viewCalendar').classList.remove('hidden');
+      } else if (viewName === 'archive') {
+        navArchiveBtn.setAttribute('aria-current', 'page');
+        navArchiveBtn.className = 'touch-target flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-emerald-950 shadow-xs transition';
+        document.getElementById('viewArchive').classList.remove('hidden');
+      }
+
+      renderDashboard();
+      safeRenderIcons();
+    }
+
+    navDashboardBtn.addEventListener('click', () => setActiveMainView('dashboard'));
+    navTodayBtn.addEventListener('click', () => setActiveMainView('today'));
+    navWeeklyBtn.addEventListener('click', () => setActiveMainView('weekly'));
+    navCalendarBtn.addEventListener('click', () => setActiveMainView('calendar'));
+    navArchiveBtn.addEventListener('click', () => setActiveMainView('archive'));
+
+    document.getElementById('btnReturnToFullDashboard').addEventListener('click', () => setActiveMainView('dashboard'));
+
+    const btnSubBoard = document.getElementById('btnSubViewBoard');
+    const btnSubList = document.getElementById('btnSubViewList');
+
+    btnSubBoard.addEventListener('click', () => {
+      subActiveView = 'board';
+      btnSubBoard.className = 'touch-target px-2.5 py-1.5 rounded-md text-xs font-extrabold bg-white text-slate-900 shadow-2xs flex items-center gap-1.5';
+      btnSubList.className = 'touch-target px-2.5 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1.5';
+      renderDashboard();
+    });
+
+    btnSubList.addEventListener('click', () => {
+      subActiveView = 'list';
+      btnSubList.className = 'touch-target px-2.5 py-1.5 rounded-md text-xs font-extrabold bg-white text-slate-900 shadow-2xs flex items-center gap-1.5';
+      btnSubBoard.className = 'touch-target px-2.5 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1.5';
+      renderDashboard();
+    });
+
+    document.getElementById('cardDueTodayBtn').addEventListener('click', () => {
+      activeCardFilter = (activeCardFilter === 'dueToday') ? null : 'dueToday';
+      renderDashboard();
+    });
+    document.getElementById('cardOverdueBtn').addEventListener('click', () => {
+      activeCardFilter = (activeCardFilter === 'overdue') ? null : 'overdue';
+      renderDashboard();
+    });
+    document.getElementById('cardHighPriorityBtn').addEventListener('click', () => {
+      activeCardFilter = (activeCardFilter === 'highPriority') ? null : 'highPriority';
+      renderDashboard();
+    });
+
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+      activeCardFilter = null;
+      document.getElementById('filterSearch').value = '';
+      document.getElementById('filterCategory').value = 'ALL';
+      document.getElementById('filterStaff').value = 'ALL';
+      document.getElementById('filterEvent').value = 'ALL';
+      document.getElementById('filterPriority').value = 'ALL';
+      document.getElementById('filterRecurrence').value = 'ALL';
+      renderDashboard();
+      showToast('All filters cleared.');
+    });
+
+    ['filterSearch', 'filterCategory', 'filterStaff', 'filterEvent', 'filterPriority', 'filterRecurrence'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => renderDashboard());
+        el.addEventListener('change', () => renderDashboard());
+      }
+    });
+
+    document.getElementById('calPrevMonthBtn').addEventListener('click', () => {
+      calendarDate.setMonth(calendarDate.getMonth() - 1);
+      renderCalendarView();
+    });
+    document.getElementById('calNextMonthBtn').addEventListener('click', () => {
+      calendarDate.setMonth(calendarDate.getMonth() + 1);
+      renderCalendarView();
+    });
+    document.getElementById('calCurrentMonthBtn').addEventListener('click', () => {
+      calendarDate = new Date();
+      renderCalendarView();
+    });
+
+    document.getElementById('weeklyPrevBtn').addEventListener('click', () => {
+      weeklyDate.setDate(weeklyDate.getDate() - 7);
+      renderWeeklyView();
+    });
+    document.getElementById('weeklyNextBtn').addEventListener('click', () => {
+      weeklyDate.setDate(weeklyDate.getDate() + 7);
+      renderWeeklyView();
+    });
+    document.getElementById('weeklyCurrentBtn').addEventListener('click', () => {
+      weeklyDate = new Date();
+      renderWeeklyView();
+    });
+
+    document.getElementById('archiveSearchInput').addEventListener('input', renderArchiveView);
+    document.getElementById('archiveStaffFilter').addEventListener('change', renderArchiveView);
+
+    document.getElementById('openNewTaskBtn').addEventListener('click', openTaskModal);
+    document.getElementById('closeTaskModalBtn').addEventListener('click', closeTaskModal);
+    document.getElementById('cancelTaskModalBtn').addEventListener('click', closeTaskModal);
+
+    document.getElementById('quickPrintBtn').addEventListener('click', () => {
+      const printList = document.getElementById('printTasksList');
+      const dateNotice = document.getElementById('printDateNotice');
+      dateNotice.textContent = `Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+      const active = tasks.filter(t => t.status !== 'Complete');
+      printList.innerHTML = active.map(t => `
+        <div class="border-b border-gray-300 pb-2">
+          <div class="flex justify-between font-bold">
+            <span>[ ] ${t.name}</span>
+            <span>Due: ${t.dueDate} (${t.priority})</span>
+          </div>
+          <div class="text-xs text-gray-600">Assigned: ${t.staff} | Category: ${t.category} ${t.event ? '| Event: ' + t.event : ''}</div>
+          ${t.description ? `<div class="text-xs text-gray-700 italic mt-0.5">${t.description}</div>` : ''}
+        </div>
+      `).join('');
+
+      window.print();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!taskModal.classList.contains('hidden')) closeTaskModal();
+        if (!deleteModal.classList.contains('hidden')) {
+          deleteModal.classList.add('hidden');
+          if (lastActiveElement) lastActiveElement.focus();
+        }
+        if (!templateModal.classList.contains('hidden')) templateModal.classList.add('hidden');
+        if (!backupModal.classList.contains('hidden')) closeBackupModal();
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      populateStaffFilterOptions();
+      populateEventFilterOptions();
+      renderBrainDumps();
+      renderDashboard();
+      safeRenderIcons();
+    });
+  </script>
+</body>
+</html>
